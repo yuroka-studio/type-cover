@@ -1,4 +1,15 @@
-# type-cover
+<h1 align="center">type-cover</h1>
+
+<p align="center">
+  <a href="https://github.com/yuroka-studio/type-cover/actions/workflows/ci.yml"><img src="https://github.com/yuroka-studio/type-cover/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="license: MIT">
+  <img src="https://img.shields.io/badge/fonts-SIL%20OFL-blue" alt="fonts: SIL OFL">
+  <img src="https://img.shields.io/badge/node-%3E%3D20.9-informational" alt="node: >=20.9">
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> · <a href="#settings">Settings</a> · <a href="#determinism">Determinism</a> · <a href="#library">Library</a> · <a href="#türkçe">Türkçe</a>
+</p>
 
 Deterministic, code-generated **typographic cover art** for releases. No AI imagery, no stock photos, no network: a title, a few labels and one accent colour, drawn as vectors, finished with seeded film grain, and written out as a 3000 px master plus web sizes. The same settings give the **same bytes** every time.
 
@@ -137,6 +148,15 @@ Covers determinism, the three sample titles, glyph coverage, auto-fit, collision
 - No other templates beyond the crosshair and the grid, and no custom fonts yet.
 - No raster input of any kind: no photos, no AI.
 - No ICC profile embedding or CMYK output (covers are sRGB, which is what streaming services expect).
+
+## More from Yuroka Studio
+
+Small, offline tools with no paid services, all MIT:
+
+- [nightshift-agents](https://github.com/yuroka-studio/nightshift-agents): scheduled coding agents that take one task from a backlog and open a pull request with real test evidence.
+- [shigley-calc](https://github.com/yuroka-studio/shigley-calc): tested machine-element calculators (endurance limit, fatigue, shafts, bolt groups) with an offline web page.
+- [waveform-peaks](https://github.com/yuroka-studio/waveform-peaks): turn songs into compact waveform data for web players.
+- [play-dev-site](https://github.com/yuroka-studio/play-dev-site): a static developer website with the privacy and account-deletion pages Google Play asks for.
 
 ## License
 
