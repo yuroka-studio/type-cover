@@ -12,13 +12,13 @@
   "bin": { "type-cover": "bin/type-cover.js" },
   "exports": { ".": "./src/index.js" },
   "files": ["bin", "src", "fonts", "examples", "LICENSE", "README.md"],
-  "engines": { "node": ">=18.17" },
+  "engines": { "node": ">=20.9.0" },
   "scripts": {
     "test": "node --test test/*.test.js",
     "example": "node bin/type-cover.js --config examples/generic.json --out out/generic"
   },
   "dependencies": {
     "fontkit": "^2.0.4",
-    "sharp": "^0.34.5"
+    "sharp": "^0.35.5"
   }
 }
