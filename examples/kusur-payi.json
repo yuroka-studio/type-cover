@@ -1,0 +1,17 @@
+{
+  "_comment": "The cover of the KUSUR PAYI EP by Yuroka, YRK-EP01. This is the design the tool was generalised from.",
+  "template": "crosshair",
+  "title": "KUSUR PAYI",
+  "artist": "YUROKA",
+  "catalog": "YRK-EP01",
+  "year": "2026",
+  "footerLeft": "SIDE A / SIDE B",
+  "accent": "#5FD0C4",
+  "background": "#080810",
+  "ink": "#F0ECE8",
+  "colors": { "rule": "#6A6A88", "muted": "#A39EB3", "guide": "#8F8A9F" },
+  "grain": 0.07,
+  "seed": 1,
+  "error": [19, -12],
+  "errorLabel": "±0.02"
+}

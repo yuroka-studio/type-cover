@@ -1,0 +1,15 @@
+{
+  "_comment": "A neutral starting point. Copy it, change the text and the two colours.",
+  "template": "crosshair",
+  "title": "SIGNAL NOISE",
+  "artist": "ARTIST NAME",
+  "catalog": "CAT-001",
+  "year": "2026",
+  "footerLeft": "SIDE A / SIDE B",
+  "accent": "#FF6B4A",
+  "background": "#0A0A0F",
+  "grain": 0.07,
+  "seed": 7,
+  "error": [-16, 11],
+  "errorLabel": "±0.02"
+}

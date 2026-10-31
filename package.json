@@ -1,0 +1,24 @@
+{
+  "name": "type-cover",
+  "version": "0.1.0",
+  "description": "Deterministic, code-generated typographic cover art for releases: crosshair / registration-mark template, seeded grain, byte-identical output. No AI imagery, fully offline.",
+  "keywords": ["cover-art", "album-art", "typography", "generative", "svg", "sharp", "deterministic"],
+  "license": "MIT",
+  "author": "Yuroka Studio",
+  "homepage": "https://github.com/yuroka-studio/type-cover#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/yuroka-studio/type-cover.git" },
+  "bugs": { "url": "https://github.com/yuroka-studio/type-cover/issues" },
+  "type": "module",
+  "bin": { "type-cover": "bin/type-cover.js" },
+  "exports": { ".": "./src/index.js" },
+  "files": ["bin", "src", "fonts", "examples", "LICENSE", "README.md"],
+  "engines": { "node": ">=18.17" },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "example": "node bin/type-cover.js --config examples/generic.json --out out/generic"
+  },
+  "dependencies": {
+    "fontkit": "^2.0.4",
+    "sharp": "^0.34.5"
+  }
+}

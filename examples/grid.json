@@ -1,0 +1,14 @@
+{
+  "_comment": "The second template: a plain grid, no crosshair. Turkish letters work: use \"uppercase\" with locale \"tr\" to turn i into İ.",
+  "template": "grid",
+  "title": "çizgi|payı",
+  "uppercase": true,
+  "locale": "tr",
+  "artist": "sanatçı adı",
+  "catalog": "kat-002",
+  "year": "2026",
+  "accent": "#E8C547",
+  "background": "#101418",
+  "grain": 0.07,
+  "seed": 3
+}
