@@ -102,3 +102,26 @@ test("main() works in-process and warns without failing", async () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("config files: string booleans and an empty formats list are errors, not silent no-ops", () =>
+  withTmp(async (dir) => {
+    const cfg = (name, obj) => {
+      const f = path.join(dir, name);
+      fs.writeFileSync(f, JSON.stringify(obj));
+      return f;
+    };
+    const out = path.join(dir, "out");
+    const svgNo = run(["--config", cfg("a.json", { title: "X", sizes: [100], formats: ["jpg"], svg: "no" }), "--out", out]);
+    assert.equal(svgNo.status, 1);
+    assert.match(svgNo.stderr, /svg must be true or false, got "no"/);
+    const upperFalse = run(["--config", cfg("b.json", { title: "x", sizes: [100], formats: ["jpg"], uppercase: "false" }), "--out", out]);
+    assert.equal(upperFalse.status, 1);
+    assert.match(upperFalse.stderr, /uppercase must be true or false/);
+    const noFormats = run(["--config", cfg("c.json", { title: "X", sizes: [600], formats: [] }), "--out", out]);
+    assert.equal(noFormats.status, 1);
+    assert.match(noFormats.stderr, /formats must list at least one/);
+    assert.ok(!fs.existsSync(out), "nothing is written when the settings are refused");
+    const longCatalog = run(["--title", "X", "--catalog", "C".repeat(50000), "--sizes", "100", "--out", out]);
+    assert.equal(longCatalog.status, 1);
+    assert.match(longCatalog.stderr, /^type-cover: catalog is too long: 50000 characters/);
+  }));

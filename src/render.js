@@ -1,9 +1,10 @@
 // Scene -> pixels with sharp. Everything that could vary between runs is pinned: no fonts are read from
 // the system, the grain comes from a seeded generator, and no timestamps or metadata are written.
+import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { resolveConfig, resolveOutputs } from "./config.js";
+import { MASTER_MIN, resolveConfig, resolveOutputs } from "./config.js";
 import { buildScene } from "./layout.js";
 import { toSvg } from "./svg.js";
 
@@ -54,8 +55,7 @@ const ENCODERS = {
   avif: (img) => img.avif({ quality: 62, chromaSubsampling: "4:4:4" }),
 };
 
-/** Sizes of 2000 px and up are the streaming-platform master and are written as JPG only. */
-export const MASTER_MIN = 2000;
+export { MASTER_MIN };
 
 /**
  * Render every requested file in memory.
@@ -84,6 +84,22 @@ export function renderSvg(settings, px = 3000) {
   return toSvg(buildScene(resolveConfig(settings)), px);
 }
 
+/**
+ * Write `data` to `file` through a temporary sibling and a rename. The rename replaces whatever is at `file`
+ * (a symlink is replaced, never followed, so a planted link cannot redirect the write onto another file),
+ * and a failed write cannot leave a truncated image behind.
+ */
+async function writeFileReplacing(file, data) {
+  const tmp = `${file}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
+  try {
+    await fs.writeFile(tmp, data, { flag: "wx" });
+    await fs.rename(tmp, file);
+  } catch (err) {
+    await fs.rm(tmp, { force: true });
+    throw err;
+  }
+}
+
 /** Render and write into `dir`. Returns what was written. */
 export async function writeCover(settings, dir) {
   const { files, warnings } = await renderCover(settings);
@@ -91,7 +107,7 @@ export async function writeCover(settings, dir) {
   const written = [];
   for (const f of files) {
     const file = path.join(dir, f.name);
-    await fs.writeFile(file, f.data);
+    await writeFileReplacing(file, f.data);
     written.push({ file, bytes: f.data.length });
   }
   return { written, warnings };

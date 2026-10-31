@@ -132,3 +132,19 @@ test("labels shrink to fit their half of the row and say so", () => {
   assert.ok(a.x1 <= 480);
   assert.deepEqual(scene(full).warnings, []);
 });
+
+test("a label that is too long is refused without echoing all of it", () => {
+  const long = "WIDE ".repeat(20).trim(); // 99 characters: within the config limit, far too wide for the corner
+  let message = "";
+  try {
+    scene({ artist: long });
+  } catch (err) {
+    message = err.message;
+  }
+  assert.match(message, /^artist is too long for the corner label/);
+  assert.ok(message.includes('"WIDE WIDE'), "the start of the text is shown");
+  assert.ok(message.endsWith('..."'), "and the rest is cut off");
+  assert.ok(message.length < 250, `message length ${message.length}`);
+  // a short label keeps the whole text in the message
+  assert.throws(() => scene({ artist: "A NAME THAT IS FAR TOO LONG" }), /artist is too long for the corner label.*"A NAME THAT IS FAR TOO LONG"/);
+});

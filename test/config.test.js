@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildPalette, lightness, parseColor } from "../src/color.js";
-import { resolveConfig, resolveOutputs } from "../src/config.js";
+import { MAX_TEXT_CHARS, MAX_TITLE_WORDS, resolveConfig, resolveOutputs } from "../src/config.js";
 
 test("defaults match the original cover", () => {
   const c = resolveConfig({ title: "X" });
@@ -59,4 +59,41 @@ test("colours: hex only, a palette is derived from background, ink and accent", 
   assert.ok(lightness(parseColor(light.ink)) < 0.2, "dark text on a light background");
   const custom = buildPalette({ background: "#080810", accent: "#5FD0C4", overrides: { rule: "#6A6A88" } });
   assert.equal(custom.rule, "#6a6a88");
+});
+
+test("true/false settings must be real booleans: \"false\" or \"no\" is a mistake, not false", () => {
+  assert.equal(resolveConfig({ title: "abc", uppercase: true }).title.lines[0], "ABC");
+  assert.equal(resolveConfig({ title: "abc", uppercase: false }).title.lines[0], "abc");
+  for (const bad of ["false", "no", "true", 0, 1, null, []]) {
+    assert.throws(() => resolveConfig({ title: "abc", uppercase: bad }), /uppercase must be true or false/, JSON.stringify(bad));
+    assert.throws(() => resolveOutputs({ svg: bad }), /svg must be true or false/, JSON.stringify(bad));
+  }
+  assert.equal(resolveOutputs({ svg: true }).svg, true);
+  assert.equal(resolveOutputs({ svg: false }).svg, false);
+  assert.equal(resolveOutputs({}).svg, false);
+});
+
+test("an empty formats list is an error when a size below the master size is asked for, like an empty sizes list", () => {
+  assert.throws(() => resolveOutputs({ formats: [] }), /formats must list at least one/);
+  assert.throws(() => resolveOutputs({ sizes: [600], formats: [] }), /formats must list at least one/);
+  assert.throws(() => resolveOutputs({ sizes: [3000, 600], formats: [] }), /formats must list at least one/);
+  assert.deepEqual(resolveOutputs({ sizes: [3000], formats: [] }).formats, []); // 3000 px is always a JPG, formats do not apply
+  assert.throws(() => resolveOutputs({ sizes: [] }), /at least one size/);
+});
+
+test("text has a length limit with a message that names the field and does not echo the text", () => {
+  const ok = "A".repeat(MAX_TEXT_CHARS);
+  const long = "A".repeat(MAX_TEXT_CHARS + 1);
+  assert.equal(resolveConfig({ title: ok }).title.lines[0], ok);
+  for (const key of ["artist", "catalog", "year", "footerLeft", "errorLabel"]) {
+    assert.equal(resolveConfig({ title: "X", [key]: ok })[key], ok, key);
+    assert.throws(() => resolveConfig({ title: "X", [key]: long }), new RegExp(`${key} is too long: ${MAX_TEXT_CHARS + 1} characters`), key);
+  }
+  assert.throws(() => resolveConfig({ title: long }), /title line is too long/);
+  assert.throws(() => resolveConfig({ title: `OK|${long}` }), /title line is too long/);
+  assert.throws(() => resolveConfig({ title: ["OK", long] }), /title line is too long/);
+  assert.throws(() => resolveConfig({ title: "X", catalog: "B".repeat(50000) }), (err) => err.message.length < 200 && !err.message.includes("BBBB"));
+  // the word count is limited too: the planner tries every split of a one-line title
+  assert.equal(resolveConfig({ title: Array(MAX_TITLE_WORDS).fill("A").join(" ") }).title.lines.length, 1);
+  assert.throws(() => resolveConfig({ title: Array(MAX_TITLE_WORDS + 1).fill("A").join(" ") }), /the title is too long: 41 words/);
 });

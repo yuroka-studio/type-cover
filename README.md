@@ -17,26 +17,26 @@ It started as the generator for the KUSUR PAYI EP cover by Yuroka (the picture a
 
 ## Quick start
 
-Needs Node 18.17 or newer.
+Needs Node 20.9 or newer.
 
 ```sh
 git clone https://github.com/yuroka-studio/type-cover
 cd type-cover
 npm install
-node bin/type-cover.js --config examples/kusur-payi.json --out out      # the showcase
+node bin/type-cover.js --config examples/kusur-payi.json --out out/showcase      # the showcase
 node bin/type-cover.js --title "SIGNAL|NOISE" --artist "ARTIST NAME" --catalog CAT-001 \
   --year 2026 --footer-left "SIDE A / SIDE B" --accent "#FF6B4A" --out out
 ```
 
-That writes `out/cover-3000.jpg` (the master), `out/cover-1200.{jpg,webp,avif}` and `out/cover-600.{jpg,webp,avif}`; add `--svg` for `out/cover.svg`. `npm link` gives you a `type-cover` command.
+Each command writes `cover-3000.jpg` (the master), `cover-1200.{jpg,webp,avif}` and `cover-600.{jpg,webp,avif}` into its `--out` folder (`out/showcase` and `out` here, so the second does not overwrite the first); add `--svg` for `cover.svg`. A file that is already there is replaced. `npm link` gives you a `type-cover` command.
 
 ## Settings
 
-Everything can be a flag or a key in a JSON file (`--config cover.json`). Flags win over the file. Unknown keys are errors, so a typo cannot silently do nothing. Keys that start with `_` or `$` in the file are ignored, handy for notes. See [`examples/`](examples).
+Everything can be a flag or a key in a JSON file (`--config cover.json`). Flags win over the file. Unknown keys and wrong types are errors, so a typo cannot silently do nothing: `uppercase` and `svg` must be `true` or `false` (not `"false"` or `"no"`), and `formats` needs at least one entry when a size below 2000 is asked for. Keys that start with `_` or `$` in the file are ignored, handy for notes. See [`examples/`](examples).
 
 | flag | config key | default | |
 | --- | --- | --- | --- |
-| `--title` | `title` | required | 1 or 2 lines. `"A\|B"`, `"A\nB"` or `["A", "B"]` force the break; otherwise it is chosen for you |
+| `--title` | `title` | required | 1 or 2 lines. `"A\|B"` or a real newline force the break, and in a JSON config so do `"A\nB"` and `["A", "B"]`; otherwise it is chosen for you. On the command line a typed `\n` is **not** a break: use `"A\|B"` or, in bash and zsh, `$'A\nB'` |
 | `--title-lines` | `titleLines` | `auto` | `1`, `2`, or `auto`: two lines only if the type can be at least 20% larger that way |
 | `--artist` | `artist` | none | top left, set as a small wide wordmark |
 | `--catalog` | `catalog` | none | top right |
@@ -60,6 +60,8 @@ Everything can be a flag or a key in a JSON file (`--config cover.json`). Flags 
 | `--sizes` | `sizes` | `3000,1200,600` | any whole numbers 64 to 8000 |
 | `--formats` | `formats` | `jpg,webp,avif` | for the sizes below 2000; 2000 and up is always a JPG |
 | `--svg` | `svg` | off | also write the vector master |
+
+Negative numbers after a flag need an `=`: `--error=-16,11` (a bare `--error -16,11` is read as another flag and refused). Each title line and each label may be up to 100 characters, and the title up to 40 words; anything longer is refused with a message (nothing that long can be set legibly on the cover).
 
 **Text is drawn exactly as you type it.** Nothing is upper-cased for you: JavaScript would turn `isimsiz` into `ISIMSIZ` (wrong for Turkish) and `ß` into `SS`. Use `--uppercase --locale tr` when you want capitals.
 
@@ -125,7 +127,7 @@ The fonts are used unmodified. Because the type is converted to outlines, the im
 
 ```sh
 npm install
-npm test     # node --test, Node 18, 20 and 22 in CI (ubuntu)
+npm test     # node --test, Node 20, 22 and 24 in CI (ubuntu)
 ```
 
 Covers determinism, the three sample titles, glyph coverage, auto-fit, collision geometry, config validation, the command line and every example.

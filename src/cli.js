@@ -25,7 +25,8 @@ Look
   --ink <hex>             text colour (default: chosen from the background)
   --grain <0-1>           grain amount (default 0.07; 0 turns it off)
   --seed <int>            grain seed (default 1)
-  --error <x,y>           how far off-centre the crosshair is, in artboard units of 1000 (default 19,-12)
+  --error <x,y>           how far off-centre the crosshair is, in artboard units of 1000 (default 19,-12).
+                          A negative first value needs an equals sign: --error=-16,11
   --error-label <text>    label at the end of the cross (default derived from --error, e.g. ±0.02)
   --title-lines <n>       auto (default), 1 or 2
   --title-weight <100-900>  Archivo weight (default 800)

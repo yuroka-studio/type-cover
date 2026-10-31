@@ -60,3 +60,8 @@ test("text is outlined from the bundled fonts only: the output does not depend o
     assert.match(licence, /SIL OPEN FONT LICENSE Version 1\.1/i);
   }
 });
+
+test("outline() copes with very long text (no call stack overflow from spreading millions of points)", () => {
+  const o = outline(monoFont(), "x".repeat(40000));
+  assert.ok(Number.isFinite(o.bbox.x0) && o.bbox.x1 > o.bbox.x0 && o.bbox.y1 > o.bbox.y0);
+});

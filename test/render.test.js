@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { mulberry32, renderCover, renderSvg } from "../src/index.js";
+import { mulberry32, renderCover, renderSvg, writeCover } from "../src/index.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHOWCASE = JSON.parse(fs.readFileSync(path.join(root, "examples", "kusur-payi.json"), "utf8"));
@@ -123,3 +123,46 @@ test("the three required strings render as titles", async () => {
     assert.equal((await sharp(files[0].data).metadata()).width, 600);
   }
 });
+
+const withTmp = async (fn) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tc-write-"));
+  try {
+    return await fn(dir);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+test("writeCover replaces a planted symlink instead of writing through it", () =>
+  withTmp(async (dir) => {
+    const victim = path.join(dir, "victim.txt");
+    fs.writeFileSync(victim, "SAFE");
+    const out = path.join(dir, "out");
+    fs.mkdirSync(out);
+    const link = path.join(out, "cover-100.jpg");
+    try {
+      fs.symlinkSync(victim, link);
+    } catch (err) {
+      if (err.code === "EPERM" || err.code === "ENOSYS") return; // symlinks need a privilege on some systems
+      throw err;
+    }
+    const { written } = await writeCover({ title: "X", sizes: [100], formats: ["jpg"] }, out);
+    assert.equal(written.length, 1);
+    assert.equal(fs.readFileSync(victim, "utf8"), "SAFE", "the file the link pointed to is untouched");
+    assert.ok(!fs.lstatSync(link).isSymbolicLink(), "the link is replaced by the image");
+    assert.equal((await sharp(link).metadata()).width, 100);
+    assert.deepEqual(fs.readdirSync(out), ["cover-100.jpg"], "no temporary files are left");
+  }));
+
+test("writeCover overwrites earlier output, and a failed write leaves no temporary file behind", () =>
+  withTmp(async (dir) => {
+    const settings = { title: "X", sizes: [100], formats: ["jpg"] };
+    await writeCover(settings, dir);
+    await writeCover({ ...settings, accent: "#112233" }, dir);
+    assert.deepEqual(fs.readdirSync(dir), ["cover-100.jpg"]);
+    // a directory where the file should go: the rename fails, the error is reported, the temp file is removed
+    const blocked = path.join(dir, "blocked");
+    fs.mkdirSync(path.join(blocked, "cover-100.jpg"), { recursive: true });
+    await assert.rejects(writeCover(settings, blocked));
+    assert.deepEqual(fs.readdirSync(blocked), ["cover-100.jpg"]);
+  }));

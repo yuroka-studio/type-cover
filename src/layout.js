@@ -116,7 +116,8 @@ function fitLabel(font, fontName, label, str, nominal, tracking) {
   const o = outline(font, str, { tracking });
   const size = Math.min(nominal, LABEL_MAX_WIDTH / inkWidthEm(o));
   if (size < nominal * 0.55) {
-    throw new Error(`${label} is too long for the corner label (about ${Math.floor((str.length * LABEL_MAX_WIDTH) / (inkWidthEm(o) * nominal * 0.55))} characters at most): "${str}"`);
+    const shown = [...str].length > 40 ? `${[...str].slice(0, 40).join("")}...` : str;
+    throw new Error(`${label} is too long for the corner label (about ${Math.floor((str.length * LABEL_MAX_WIDTH) / (inkWidthEm(o) * nominal * 0.55))} characters at most): "${shown}"`);
   }
   return { o, size, shrunk: size < nominal };
 }

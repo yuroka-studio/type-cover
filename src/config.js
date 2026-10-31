@@ -29,6 +29,16 @@ export const DEFAULTS = Object.freeze({
 /** Keys that describe what to write rather than what to draw. */
 export const OUTPUT_KEYS = ["sizes", "formats", "svg", "name"];
 
+/** Sizes of 2000 px and up are the streaming-platform master and are written as JPG only. */
+export const MASTER_MIN = 2000;
+
+/**
+ * Upper bounds on text. Far beyond anything that can be set legibly on the cover, but small enough that a
+ * generated or untrusted config cannot make the title planner run for minutes or exhaust the stack.
+ */
+export const MAX_TEXT_CHARS = 100; // per title line and per label
+export const MAX_TITLE_WORDS = 40;
+
 const num = (v, what) => {
   const n = typeof v === "string" && v.trim() !== "" ? Number(v) : v;
   if (typeof n !== "number" || !Number.isFinite(n)) throw new Error(`${what} must be a number, got ${JSON.stringify(v)}`);
@@ -40,6 +50,18 @@ const text = (v, what) => {
   if (typeof v !== "string") throw new Error(`${what} must be text, got ${JSON.stringify(v)}`);
   return v.trim();
 };
+/** Text with a length limit. The message gives the length, never the text itself. */
+const limited = (v, what) => {
+  const t = text(v, what);
+  const n = [...t].length;
+  if (n > MAX_TEXT_CHARS) throw new Error(`${what} is too long: ${n} characters, at most ${MAX_TEXT_CHARS} are allowed`);
+  return t;
+};
+/** A real boolean: "false", "no" and 0 are mistakes, not false. */
+const bool = (v, what) => {
+  if (v === true || v === false) return v;
+  throw new Error(`${what} must be true or false, got ${JSON.stringify(v)}`);
+};
 
 /** Split a title into lines. A string may use "|" or a newline as the break; an array is taken as is. */
 function parseTitle(v) {
@@ -47,17 +69,20 @@ function parseTitle(v) {
   let lines;
   let explicit;
   if (Array.isArray(v)) {
-    lines = v.map((l) => text(l, "title line"));
+    lines = v.map((l) => limited(l, "title line"));
     explicit = true;
   } else if (typeof v === "string") {
     lines = v.split(/\r?\n|\|/).map((l) => l.trim());
     explicit = lines.length > 1;
+    for (const l of lines) limited(l, "title line");
   } else {
     throw new Error("title must be text or a list of 1 or 2 lines");
   }
   lines = lines.filter((l) => l !== "");
   if (lines.length === 0) throw new Error("title is required (1 or 2 lines)");
   if (lines.length > 2) throw new Error(`the title can have at most 2 lines, got ${lines.length}`);
+  const words = lines.reduce((n, l) => n + l.split(/\s+/).length, 0);
+  if (words > MAX_TITLE_WORDS) throw new Error(`the title is too long: ${words} words, at most ${MAX_TITLE_WORDS} are allowed`);
   return { lines, explicit };
 }
 
@@ -77,7 +102,8 @@ export function resolveConfig(input = {}) {
   } catch {
     throw new Error(`locale "${locale}" is not a valid language tag (try "en" or "tr")`);
   }
-  const upper = (s) => (c.uppercase ? s.toLocaleUpperCase(locale) : s);
+  const uppercase = bool(c.uppercase, "uppercase");
+  const upper = (s) => (uppercase ? s.toLocaleUpperCase(locale) : s);
 
   const title = parseTitle(c.title);
   const grain = num(c.grain, "grain");
@@ -107,10 +133,10 @@ export function resolveConfig(input = {}) {
     titleLines,
     titleWeight,
     titleWidth,
-    artist: upper(text(c.artist, "artist")),
-    catalog: upper(text(c.catalog, "catalog")),
-    year: upper(text(c.year, "year")),
-    footerLeft: upper(text(c.footerLeft, "footerLeft")),
+    artist: upper(limited(c.artist, "artist")),
+    catalog: upper(limited(c.catalog, "catalog")),
+    year: upper(limited(c.year, "year")),
+    footerLeft: upper(limited(c.footerLeft, "footerLeft")),
     accent: c.accent,
     background: c.background,
     ink: c.ink,
@@ -118,8 +144,8 @@ export function resolveConfig(input = {}) {
     grain,
     seed,
     error,
-    errorLabel: c.errorLabel === undefined || c.errorLabel === null ? undefined : text(c.errorLabel, "errorLabel"),
-    uppercase: Boolean(c.uppercase),
+    errorLabel: c.errorLabel === undefined || c.errorLabel === null ? undefined : limited(c.errorLabel, "errorLabel"),
+    uppercase,
     locale,
   });
 }
@@ -131,7 +157,9 @@ export function resolveOutputs(input = {}) {
   for (const s of sizes) if (!Number.isInteger(s) || s < 64 || s > 8000) throw new Error(`each size must be a whole number from 64 to 8000, got ${s}`);
   const formats = (typeof input.formats === "string" ? input.formats.split(",") : input.formats ?? OUTPUT_FORMATS).map((f) => String(f).trim().toLowerCase().replace(/^jpeg$/, "jpg"));
   for (const f of formats) if (!OUTPUT_FORMATS.includes(f)) throw new Error(`unknown format "${f}" (use ${OUTPUT_FORMATS.join(", ")})`);
+  // sizes of MASTER_MIN and up are always a JPG, so an empty list only matters when a smaller size is asked for
+  if (formats.length === 0 && sizes.some((s) => s < MASTER_MIN)) throw new Error(`formats must list at least one of ${OUTPUT_FORMATS.join(", ")} (it is used for the sizes below ${MASTER_MIN})`);
   const name = input.name ?? "cover";
   if (!/^[\w.-]+$/.test(name)) throw new Error(`name may only contain letters, digits, ".", "-" and "_", got "${name}"`);
-  return { sizes: [...new Set(sizes)], formats: [...new Set(formats)], svg: Boolean(input.svg), name };
+  return { sizes: [...new Set(sizes)], formats: [...new Set(formats)], svg: input.svg === undefined ? false : bool(input.svg, "svg"), name };
 }

@@ -105,12 +105,18 @@ export function outline(font, text, { tracking = 0 } = {}) {
     pen += pos.xAdvance + (i < run.glyphs.length - 1 ? tracking * upm : 0);
   });
   if (pts.length === 0) throw new Error(`nothing to draw for "${text}"`);
-  const xs = pts.map((p) => p[0]);
-  const ys = pts.map((p) => p[1]);
+  // a loop, not Math.min(...xs): spreading millions of points overflows the call stack on very long text
+  const bbox = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+  for (const [x, y] of pts) {
+    if (x < bbox.x0) bbox.x0 = x;
+    if (x > bbox.x1) bbox.x1 = x;
+    if (y < bbox.y0) bbox.y0 = y;
+    if (y > bbox.y1) bbox.y1 = y;
+  }
   return {
     segments,
     advance: pen / upm,
-    bbox: { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) },
+    bbox,
     capHeight: (font["OS/2"]?.capHeight ?? 700) / upm,
   };
 }
