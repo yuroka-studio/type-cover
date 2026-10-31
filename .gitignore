@@ -6,3 +6,13 @@ out/
 .env.*
 .vscode/
 .idea/
+# credentials and local npm config (auth tokens live in .npmrc)
+.npmrc
+# npm pack tarballs
+*.tgz
+# generated or local-only output
+cikti/
+coverage/
+test-results/
+qa/
+screenshots/
