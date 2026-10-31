@@ -158,7 +158,7 @@ Kullanım:
 ```sh
 npm install
 node bin/type-cover.js --title "İSİMSİZ" --artist "SANATÇI ADI" --catalog KAT-001 --year 2026 --out cikti
-node bin/type-cover.js --config examples/kusur-payi.json --out cikti
+node bin/type-cover.js --config examples/kusur-payi.json --out cikti/kusur-payi
 ```
 
 Küçük harfle yazdığınız metni büyük harfe çevirmek için `--uppercase --locale tr` kullanın (`i` → `İ`). Metin, siz yazdığınız gibi çizilir; kendiliğinden büyük harfe çevrilmez. Lisans: MIT, © Yuroka Studio.
